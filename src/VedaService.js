@@ -1,5 +1,4 @@
 import { Backend, BaseModel, Model } from "veda-client";
-import * as util from "./Util.js";
 
 export default class VedaService {
 
