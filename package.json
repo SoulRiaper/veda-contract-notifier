@@ -5,7 +5,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "node main.js"
+    "start": "node --use-openssl-ca --openssl-legacy-provider main.js"
   },
   "author": "Roman Kozlov",
   "license": "ISC",

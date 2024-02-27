@@ -10,3 +10,24 @@ export function timeout (ms = options.timeout) {
     setTimeout(resolve, ms);
   });
 }
+
+export function newUri (data) {
+  return [{
+    "data": data,
+    "type": "Uri"
+  }]
+}
+
+export function newBool (data) {
+  return [{
+    "data": data,
+    "type": "Boolean"
+  }]
+}
+
+export function newString (data) {
+  return [{
+    "data": data,
+    "type": "String"
+  }]
+}

@@ -1,4 +1,5 @@
-import { Backend } from "veda-client";
+import { Backend, BaseModel, Model } from "veda-client";
+import * as util from "./Util.js";
 
 export default class VedaService {
 
@@ -39,5 +40,32 @@ export default class VedaService {
 
     async authenticate () {
       return await Backend.authenticate(this.options.veda.user, this.options.veda.password);
+    }
+
+    async getDocsFromStoredQuery (query, params) {
+      return await this.getByUri("d:hi0hb9q1zvafkbv4ice02p6n86");
+
+    //   if (!params) {
+    //     params = new Model();
+    //     params["rdf:type"] = util.newUri("v-s:QueryParams");
+    //     params["v-s:resultFormat"] = util.newString("full");
+    //   }
+    //   params["v-s:storedQuery"] = util.newUri(query);
+    //   return await Backend.stored_query(JSON.stringify(["v-s:QueryParams", query, "full"]));
+    // }
+    }
+
+    async getChiefUri(department,depth){
+      depth = depth || 0;
+      if ( department ) {
+        if ( depth > 15 ) return undefined;
+        if ( department["v-s:hasChief"] ) return department["v-s:hasChief"][0].id;
+        if ( department["v-s:parentUnit"] ) {
+          const dep = department['v-s:parentUnit'][0]
+          dep.load();
+          return this.getChiefUri(dep, depth + 1);
+        };
+      };
+      return undefined;
     }
 }
