@@ -68,4 +68,17 @@ export default class VedaService {
       };
       return undefined;
     }
+
+    async getMailTemplate (templateUri) {
+      let result = {};
+      const mailTemplateObj = await Backend.get_individual(templateUri);
+      result["subject"] = mailTemplateObj["v-s:notificationSubject"][0].data;
+      result["body"] = mailTemplateObj["v-s:notificationBody"][0].data;
+      return result;
+    }
+
+    #appName = "Optiflow";
+    getAppName() {
+      return this.#appName;
+    }
 }

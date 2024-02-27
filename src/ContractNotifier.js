@@ -1,6 +1,7 @@
 import VedaService from "./VedaService.js";
 import { BaseModel } from "veda-client";
-
+import Mustache from "mustache";
+ 
 export default class ContractNotifier {
 
     constructor (options) {
@@ -55,5 +56,17 @@ export default class ContractNotifier {
         if (!isSupporterValid || !isManagerValid || !isDepValid) {
             return contractExecutor.id;
         }
+    }
+
+    async sendMails (recipient, contractList) {
+        const view = {
+            app_name: this.veda.getAppName(),
+            contract_list: contractList.map(item => this.options.veda.server + "#/" + item + "\n")
+        }
+        let letterTemplate = await this.veda.getMailTemplate("mnd-s:msg-template-notification_not-actual-contract-responsible");
+        letterTemplate.subject = Mustache.render(letterTemplate.subject, view).replace (/&#x2F;/g, '/');
+        letterTemplate.body = Mustache.render(letterTemplate.body, view).replace (/&#x2F;/g, '/');
+        console.log(letterTemplate.subject);
+        console.log(letterTemplate.body);
     }
 }
