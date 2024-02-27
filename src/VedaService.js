@@ -55,7 +55,7 @@ export default class VedaService {
     // }
     }
 
-    async getChiefUri(department,depth){
+    async getChiefUri (department,depth) {
       depth = depth || 0;
       if ( department ) {
         if ( depth > 15 ) return undefined;
@@ -77,8 +77,22 @@ export default class VedaService {
       return result;
     }
 
+    prepareEmailLetter (recipient, letterView) {
+      const letter = new BaseModel();
+      letter.addValue('rdf:type', "v-s:Email");
+      letter.addValue("v-wf:to", recipient);
+      letter.addValue("v-wf:from", this.options.veda.mail.senderAppointment);
+      letter.addValue("v-s:subject", letterView.subject);
+      letter.addValue("v-s:messageBody", letterView.body);
+      letter.addValue("v-s:hasMessageType", "v-s:OtherNotification");
+      letter.addValue("v-s:origin", "contract-notifier");
+      letter.addValue("v-s:created", new Date());
+      letter.addValue("v-s:creator", this.options.veda.mail.senderAppointment);
+      return letter;
+    }
+
     #appName = "Optiflow";
-    getAppName() {
+    getAppName () {
       return this.#appName;
     }
 }
