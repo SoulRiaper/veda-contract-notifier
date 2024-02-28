@@ -95,7 +95,4 @@ export default class ContractNotifier {
         return toSend;
     }
 
-    async getContracts () {
-        this.veda.getDocsByQuery();
-    }
 }
