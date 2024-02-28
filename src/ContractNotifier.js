@@ -1,6 +1,7 @@
 import VedaService from "./VedaService.js";
 import { BaseModel } from "veda-client";
 import Mustache from "mustache";
+import log from "./log.js"
  
 export default class ContractNotifier {
 
@@ -42,7 +43,7 @@ export default class ContractNotifier {
         const isManagerValid = await this.veda.isIndividValid(contractManager);
         const isDepValid = await this.veda.isIndividValid(contractDep);
 
-        console.log(`Exec ${isExecutorValid}, Dep ${isDepValid}, Supp ${isSupporterValid}, man ${isManagerValid}\n`);
+        log.info(`Exec ${isExecutorValid}, Dep ${isDepValid}, Supp ${isSupporterValid}, man ${isManagerValid}\n`);
 
         if (!isExecutorValid) {
             if (contract.hasValue("v-s:responsibleDepartment")) {
@@ -64,7 +65,7 @@ export default class ContractNotifier {
             app_name: this.veda.getAppName(),
             contract_list: contractList.map(item => this.options.veda.server + "#/" + item + "\n")
         }
-        let letter = await this.veda.getMailTemplate("mnd-s:msg-template-notification_not-actual-contract-responsible");
+        let letter = await this.veda.getMailTemplate(this.options.veda.mail.template);
         letter.subject = Mustache.render(letter.subject, view).replace (/&#x2F;/g, '/');
         letter.body = Mustache.render(letter.body, view).replace (/&#x2F;/g, '/');
 
@@ -73,12 +74,12 @@ export default class ContractNotifier {
             recipient = "d:contract_controller_role";
         }
 
-        console.log(`Mail will send to: ${recipient}`);
-        console.log(letter.subject);
-        console.log(letter.body);
+        log.info(`Mail will send to: ${recipient}`);
+        log.info(letter.subject);
+        log.info(letter.body);
         const mailObj = this.veda.prepareEmailLetter(recipient, letter);
         await mailObj.save();
-        console.log(`Mail sent to, uid: ${mailObj.id}`);
+        log.info(`Mail sent to, uid: ${mailObj.id}`);
     }
 
     async getContracts () {

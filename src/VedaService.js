@@ -1,4 +1,5 @@
 import { Backend, BaseModel, Model } from "veda-client";
+import log from "./log.js"
 
 export default class VedaService {
 
@@ -10,12 +11,12 @@ export default class VedaService {
         try{
             Backend.init(this.options.veda.server);
             const authInfo = await this.authenticate();
-            console.log('Veda user authentication success:', this.options.veda.user);
-            console.log('Ticket will expire at:', new Date(authInfo.expires).toISOString());
+            log.info('Veda user authentication success:', this.options.veda.user);
+            log.info('Ticket will expire at:', new Date(authInfo.expires).toISOString());
             setInterval(this.#refreshTicket.bind(this), (authInfo.expires - Date.now()) * 0.9);
         } catch (error) {
-          console.log('Veda user authentication error:', error.message);
-          console.log(error);
+          log.error('Veda user authentication error:', error.message);
+          log.debug(error);
           throw error;
         }
     }
@@ -23,11 +24,11 @@ export default class VedaService {
     async #refreshTicket () {
         try {
           const authInfo = await this.authenticate();
-          console.log('Veda ticket refreshed for user:', this.options.veda.user);
-          console.log('Ticket will expire at:', new Date(authInfo.expires).toISOString());
+          log.info('Veda ticket refreshed for user:', this.options.veda.user);
+          log.info('Ticket will expire at:', new Date(authInfo.expires).toISOString());
         } catch (error) {
           console.error('Veda ticket refresh error:', error.message);
-          console.log(error);
+          log.error(error);
           await timeout();
           await this.#refreshTicket();
         }

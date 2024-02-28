@@ -11,6 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "mustache": "^4.2.0",
+    "loglevel": "^1.9.1",
+    "loglevel-plugin-prefix": "^0.8.4",
     "veda-client": "github:semantic-machines/veda-client"
   }
 }
