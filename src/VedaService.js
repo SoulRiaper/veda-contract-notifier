@@ -55,19 +55,6 @@ export default class VedaService {
     // }
     }
 
-    async getDocsByQuery () {
-      return await Backend.stored_query(`select t1.id
-      from veda_tt.\`mnd-s:Contract\` t1 final
-        left join veda_tt.\`v-s:Appointment\` t2 final on t2.id=t1.mnd_s_ContractManager_str[1]
-        left join veda_tt.\`v-s:Appointment\` t3 final on t3.id=t1.mnd_s_executorSpecialistOfContract_str[1]
-        left join veda_tt.\`v-s:Appointment\` t4 final on t4.id=t1.mnd_s_supportSpecialistOfContract_str[1]
-        left join veda_tt.\`v-s:Department\` t5 final on t5.id=t1.v_s_responsibleDepartment_str[1]
-      where t1.mnd_s_isContractClosed_int = [0]
-       and length(t1.v_s_hasRegistrationRecord_str)>0 and t1.v_s_hasRegistrationRecord_str != ['']
-       and t1.v_s_deleted_int = [0]
-       and (t2.v_s_deleted_int=[1] or t3.v_s_deleted_int=[1] or t4.v_s_deleted_int=[1] or t5.v_s_deleted_int=[1])`)
-    }
-
     async getChiefUri (department,depth) {
       depth = depth || 0;
       if ( department ) {
@@ -82,7 +69,7 @@ export default class VedaService {
       return undefined;
     }
 
-    async getMailTemplate (templateUri) {
+    async getMailLetterView (templateUri) {
       let result = {};
       const mailTemplateObj = await Backend.get_individual(templateUri);
       result["subject"] = mailTemplateObj["v-s:notificationSubject"][0].data;
