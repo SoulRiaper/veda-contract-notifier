@@ -37,10 +37,10 @@ export default class ContractNotifier {
         await contractManager.load();
         await contractDep.load();
 
-        const isExecutorValid = contractExecutor.hasValue("v-s:valid", true) && ! contractExecutor.hasValue('v-s:deleted', true);
-        const isSupporterValid = contractSupporter.hasValue("v-s:valid", true) && ! contractSupporter.hasValue('v-s:deleted', true);
-        const isManagerValid = contractManager.hasValue("v-s:valid", true) && ! contractManager.hasValue('v-s:deleted', true);
-        const isDepValid = ! contractDep.hasValue('v-s:deleted', true);
+        const isExecutorValid = await this.veda.isIndividValid(contractExecutor);
+        const isSupporterValid = await this.veda.isIndividValid(contractSupporter);
+        const isManagerValid = await this.veda.isIndividValid(contractManager);
+        const isDepValid = await this.veda.isIndividValid(contractDep);
 
         console.log(`Exec ${isExecutorValid}, Dep ${isDepValid}, Supp ${isSupporterValid}, man ${isManagerValid}\n`);
 
@@ -59,7 +59,7 @@ export default class ContractNotifier {
         }
     }
 
-    async sendMails (recipient, contractList) {
+    async sendMail (recipient, contractList) {
         const view = {
             app_name: this.veda.getAppName(),
             contract_list: contractList.map(item => this.options.veda.server + "#/" + item + "\n")
@@ -67,12 +67,21 @@ export default class ContractNotifier {
         let letter = await this.veda.getMailTemplate("mnd-s:msg-template-notification_not-actual-contract-responsible");
         letter.subject = Mustache.render(letter.subject, view).replace (/&#x2F;/g, '/');
         letter.body = Mustache.render(letter.body, view).replace (/&#x2F;/g, '/');
+
+        const recipientObj = new BaseModel(recipient);
+        if (! await this.veda.isIndividValid(recipientObj)) {
+            recipient = "d:contract_controller_role";
+        }
+
         console.log(`Mail will send to: ${recipient}`);
         console.log(letter.subject);
         console.log(letter.body);
-
         const mailObj = this.veda.prepareEmailLetter(recipient, letter);
         await mailObj.save();
         console.log(`Mail sent to, uid: ${mailObj.id}`);
+    }
+
+    async getContracts () {
+        this.veda.getDocsByQuery();
     }
 }
