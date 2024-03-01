@@ -1,0 +1,20 @@
+export default {
+    name: 'Veda-Contract-Notification service',
+    veda: {
+      server: 'https://localhost',
+      user: '***',
+      password: '***',
+      mail: {
+        senderAppointment: "***",
+        template: "***email-template***"
+      }
+    },
+    telegram: {
+      botToken: '***',
+      chatId: '***',
+    },
+    logLevel: ['debug', 'info', 'warn', 'error'][1],
+    timeout: 60000,
+    errorStategy: ['fail', 'retry'][1],
+  };
+  

@@ -1,7 +1,8 @@
-node_modules
-options.js
+tmp/**/*
+node_modules/**/*
+dist/**/*
+conf/**/options.js
 package-lock.json
-conf
 .pid
 *.log
-log
+*.geany
