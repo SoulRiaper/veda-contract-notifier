@@ -69,14 +69,6 @@ export default class VedaService {
         return undefined;
     }
 
-    async getMailLetterView (templateUri) {
-        let result = {};
-        const mailTemplateObj = await Backend.get_individual(templateUri);
-        result["subject"] = mailTemplateObj["v-s:notificationSubject"][0].data;
-        result["body"] = mailTemplateObj["v-s:notificationBody"][0].data;
-        return result;
-    }
-
     async isIndividValid (individ) {
         await individ.load();
         if (individ.hasValue("v-s:valid") && individ.hasValue('v-s:deleted')) {
@@ -91,6 +83,14 @@ export default class VedaService {
         return true;
     }
 
+    async getMailLetterView (templateUri) {
+        let result = {};
+        const mailTemplateObj = await Backend.get_individual(templateUri);
+        result["subject"] = mailTemplateObj["v-s:notificationSubject"][0].data;
+        result["body"] = mailTemplateObj["v-s:notificationBody"][0].data;
+        return result;
+    }
+    
     prepareEmailLetter (recipient, letterView) {
         const letter = new BaseModel();
         letter.addValue('rdf:type', "v-s:Email");
