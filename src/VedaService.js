@@ -34,25 +34,28 @@ export default class VedaService {
         }
     }
 
-    async getByUri(uri) {
-        return await Backend.get_individual(uri);
-    }
-
     async authenticate () {
         return await Backend.authenticate(this.options.veda.user, this.options.veda.password);
     }
 
-    async getDocsFromStoredQuery (query, params) {
-        return await this.getByUri("d:hi0hb9q1zvafkbv4ice02p6n86");
-
-    //   if (!params) {
-    //     params = new Model();
-    //     params["rdf:type"] = util.newUri("v-s:QueryParams");
-    //     params["v-s:resultFormat"] = util.newString("full");
-    //   }
-    //   params["v-s:storedQuery"] = util.newUri(query);
-    //   return await Backend.stored_query(JSON.stringify(["v-s:QueryParams", query, "full"]));
-    // }
+    async getDocsFromStoredQuery () {
+        return await Backend.query({
+            from: 0,
+            top: 10000,
+            limit: 10000,
+            sql: `
+              select Distinct t1.id
+              from veda_tt."mnd-s:Contract" t1 final
+                left join veda_tt."v-s:Appointment" t2 final on t2.id=t1.mnd_s_ContractManager_str[1]
+                left join veda_tt."v-s:Appointment" t3 final on t3.id=t1.mnd_s_executorSpecialistOfContract_str[1]
+                left join veda_tt."v-s:Appointment" t4 final on t4.id=t1.mnd_s_supportSpecialistOfContract_str[1]
+                left join veda_tt."v-s:Department" t5 final on t5.id=t1.v_s_responsibleDepartment_str[1]
+              where t1.mnd_s_isContractClosed_int = [0]
+               and length(t1.v_s_hasRegistrationRecord_str)>0 and t1.v_s_hasRegistrationRecord_str != ['']
+               and t1.v_s_deleted_int = [0]
+               and (t2.v_s_deleted_int=[1] or t3.v_s_deleted_int=[1] or t4.v_s_deleted_int=[1] or t5.v_s_deleted_int=[1])
+              `,
+          });
     }
 
     async getChiefUri (department,depth) {

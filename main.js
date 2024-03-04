@@ -6,11 +6,14 @@ async function run() {
     log.info("Script starting.");
     const app = new ContractNotifier(options);
     await app.init();
+    
+    const contractsQueryResult = await app.getContractsFromStoredQuery();
 
-    const contractsUri = await app.getContractsFromStoredQuery();
-    log.info("Start sending emails.");
-    const toSendList = await app.getToSendList(contractsUri);
+    const toSendList = await app.getToSendList(contractsQueryResult.result);
     for (let toSendPerson in toSendList) {
+        if (!toSendPerson) {
+            continue;
+        }
         try {
             await app.sendMail(toSendPerson, toSendList[toSendPerson]);
         } catch (error) {

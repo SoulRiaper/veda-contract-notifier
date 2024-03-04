@@ -2,7 +2,7 @@ import VedaService from "./VedaService.js";
 import { BaseModel } from "veda-client";
 import Mustache from "mustache";
 import log from "./log.js"
- 
+
 export default class ContractNotifier {
 
     constructor (options) {
@@ -15,53 +15,76 @@ export default class ContractNotifier {
     }
 
     async getContractsFromStoredQuery () {
-        return ["d:hi0hb9q1zvafkbv4ice02p6n86"];
-        // try {
-        //     return await this.veda.getDocsFromStoredQuery("v-s:contract-unvalid-responsibles");
-        // } catch (error) {
-        //     console.error("Cant fetch data, error with message: ", error.message);
-        //     throw error;
-        // }
+        return await this.veda.getDocsFromStoredQuery();
     }
 
     async getPersonToNotify (contractUri) {
         const contract = new BaseModel(contractUri);
-        await contract.load();
-
-        const contractExecutor = contract["mnd-s:executorSpecialistOfContract"][0]; 
-        const contractSupporter = contract["mnd-s:supportSpecialistOfContract"][0];
-        const contractManager = contract["mnd-s:ContractManager"][0];
-        const contractDep = contract["v-s:responsibleDepartment"][0];
-
-        await contractExecutor.load();
-        await contractSupporter.load();
-        await contractManager.load();
-        await contractDep.load();
-
-        const isExecutorValid = await this.veda.isIndividValid(contractExecutor);
-        const isSupporterValid = await this.veda.isIndividValid(contractSupporter);
-        const isManagerValid = await this.veda.isIndividValid(contractManager);
-        const isDepValid = await this.veda.isIndividValid(contractDep);
+        try {
+            await contract.load();
+        } catch (error) {
+            log.error(contractUri, error.message);
+            throw error;
+        }
+        const isExecutorValid = await this.isContractResponsibleValid(contract, "mnd-s:executorSpecialistOfContract");
+        const isSupporterValid = await this.isContractResponsibleValid(contract, "mnd-s:supportSpecialistOfContract");
+        const isManagerValid = await this.isContractResponsibleValid(contract, "mnd-s:ContractManager");
+        const isDepValid = await this.isContractResponsibleValid(contract, "v-s:responsibleDepartment");
+        log.info(`isExecutorValid: ${isExecutorValid}, isSupporterValid: ${isSupporterValid}, isManagerValid: ${isManagerValid}, isDepValid: ${isDepValid}`);
 
         if (!isExecutorValid) {
             if (contract.hasValue("v-s:responsibleDepartment")) {
                 const responsibleDep = contract["v-s:responsibleDepartment"][0];
                 await responsibleDep.load();
                 const depChief = await this.veda.getChiefUri(responsibleDep);
-                return depChief? depChief : "d:contract_controller_role"
-            } else {
-                return "d:contract_controller_role";
+                if (depChief) {
+                    const depChiefObj = new BaseModel(depChief);
+                    if (await this.veda.isIndividValid(depChiefObj)) {
+                        return depChief;
+                    }
+                }
             }
+            return "d:contract_controller_role";
         }
         if (!isSupporterValid || !isManagerValid || !isDepValid) {
-            return contractExecutor.id;
+            return contract["mnd-s:executorSpecialistOfContract"][0].id;
         }
+        return "d:contract_controller_role";
+    }
+
+    async isContractResponsibleValid (contract, responsibleProp) {
+        if (contract.hasValue(responsibleProp)) {
+            const responsible = contract[responsibleProp][0];
+            await responsible.load();
+            return await this.veda.isIndividValid(responsible);
+        }
+        return await false;
+    }
+
+    async getToSendList (contractsUri) {
+        let toSend = {};
+        for(let i = 0; i < contractsUri.length; i++){
+            log.info(`Try to get responsible for contract: ${contractsUri[i]}`);
+            try {
+                const personToNotify = await this.getPersonToNotify(contractsUri[i]);
+                if (!toSend[personToNotify]) {
+                    toSend[personToNotify] = [contractsUri[i]];
+                } else {
+                    toSend[personToNotify].push(contractsUri[i]);
+                }
+            } catch (error) {
+                log.error(`Cant calculate person to notify CONTRACT: ${contractsUri[i]}`);
+                continue;
+            }
+            log.info(`Get responsible for: ${contractsUri[i]}`);
+        }
+        return toSend;
     }
 
     async sendMail (recipient, contractList) {
         const view = {
             app_name: this.veda.getAppName(),
-            contract_list: contractList.map(item => this.options.veda.server + "#/" + item + "\n")
+            contract_list: contractList.map(item => this.options.veda.server + "#/" + item).join('\n')
         }
         let letter = await this.veda.getMailLetterView(this.options.veda.mail.template);
         letter.subject = Mustache.render(letter.subject, view).replace (/&#x2F;/g, '/');
@@ -74,25 +97,6 @@ export default class ContractNotifier {
 
         const mailObj = this.veda.prepareEmailLetter(recipient, letter);
         await mailObj.save();
-        log.info(`Mail will send to: ${recipient}. Email obj uri: ${mailObj.id}`);
+        log.info(`Mail send to: ${recipient}. Email obj uri: ${mailObj.id}`);
     }
-
-    async getToSendList (contractsUri) {
-        let toSend = {};
-        for(let i = 0; i < contractsUri.length; i++){
-            try {
-                const personToNotify = await this.getPersonToNotify(contractsUri[i]);
-                if (!toSend[personToNotify]) {
-                    toSend[personToNotify] = [contractsUri[i]];
-                } else {
-                    toSend[personToNotify].push(contractsUri[i]);
-                }
-            } catch (error) {
-                log.error(`Cant calculate person to notify to: ${contractsUri[i]}`);
-                throw error
-            }
-        }
-        return toSend;
-    }
-
 }
