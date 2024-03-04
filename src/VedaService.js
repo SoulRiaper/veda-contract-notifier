@@ -44,7 +44,7 @@ export default class VedaService {
             top: 10000,
             limit: 10000,
             sql: `
-              select Distinct t1.id
+              select distinct t1.id
               from veda_tt."mnd-s:Contract" t1 final
                 left join veda_tt."v-s:Appointment" t2 final on t2.id=t1.mnd_s_ContractManager_str[1]
                 left join veda_tt."v-s:Appointment" t3 final on t3.id=t1.mnd_s_executorSpecialistOfContract_str[1]

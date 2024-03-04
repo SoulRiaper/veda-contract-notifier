@@ -30,7 +30,6 @@ export default class ContractNotifier {
         const isSupporterValid = await this.isContractResponsibleValid(contract, "mnd-s:supportSpecialistOfContract");
         const isManagerValid = await this.isContractResponsibleValid(contract, "mnd-s:ContractManager");
         const isDepValid = await this.isContractResponsibleValid(contract, "v-s:responsibleDepartment");
-        log.info(`isExecutorValid: ${isExecutorValid}, isSupporterValid: ${isSupporterValid}, isManagerValid: ${isManagerValid}, isDepValid: ${isDepValid}`);
 
         if (!isExecutorValid) {
             if (contract.hasValue("v-s:responsibleDepartment")) {
