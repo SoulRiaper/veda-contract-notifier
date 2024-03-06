@@ -2,4 +2,4 @@
 
 time=`date -Iseconds`
 echo $time
-/sbin/start-stop-daemon --start --verbose --chdir $PWD --make-pidfile --pidfile $PWD/.pid --background --startas /bin/bash -- -c "exec node --use-openssl-ca --openssl-legacy-provider src/main.js >> log/${PWD##*/}-$time.log 2>&1"
+/sbin/start-stop-daemon --start --verbose --chdir $PWD --make-pidfile --pidfile $PWD/.pid --background --startas /bin/bash -- -c "exec node --use-openssl-ca --openssl-legacy-provider src/veda-contract-notifier.js >> log/${PWD##*/}-$time.log 2>&1"
