@@ -3,12 +3,21 @@
   "version": "1.0.0",
   "type": "module",
   "description": "",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
     "start": "node --use-openssl-ca --openssl-legacy-provider main.js"
   },
   "author": "Roman Kozlov",
   "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.55.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-security-node": "^1.1.1"
+  },
   "dependencies": {
     "mustache": "^4.2.0",
     "loglevel": "^1.9.1",

@@ -1,0 +1,1 @@
+eslint -c .eslintrc.json ./src/
