@@ -1,6 +1,6 @@
-import ContractNotifier from "./src/ContractNotifier.js";
-import options from "./conf/options.js"
-import log from "./src/log.js"
+import ContractNotifier from "./ContractNotifier.js";
+import options from "../conf/options.js"
+import log from "./log.js"
 
 async function run() {
     log.info("Script starting.");
