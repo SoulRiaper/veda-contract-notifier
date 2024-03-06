@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "description": "",
-  "main": "src/main.js",
+  "main": "src/veda-contract-notifier.js",
   "scripts": {
-    "start": "node --use-openssl-ca --openssl-legacy-provider main.js"
+    "start": "node --use-openssl-ca --openssl-legacy-provider src/veda-contract-notifier.js"
   },
   "author": "Roman Kozlov",
   "license": "ISC",
