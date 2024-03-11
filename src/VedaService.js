@@ -73,12 +73,6 @@ export default class VedaService {
 
   async isIndividValid (individ) {
     await individ.load();
-    if (individ.hasValue('v-s:valid') && individ.hasValue('v-s:deleted')) {
-      return individ.hasValue('v-s:valid', true) && individ.hasValue('v-s:deleted', false);
-    }
-    if (individ.hasValue('v-s:valid')) {
-      return individ.hasValue('v-s:valid', true);
-    }
     if (individ.hasValue('v-s:deleted')) {
       return individ.hasValue('v-s:deleted', false);
     }
