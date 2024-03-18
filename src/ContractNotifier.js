@@ -2,6 +2,7 @@ import VedaService from './VedaService.js';
 import {BaseModel} from 'veda-client';
 import Mustache from 'mustache';
 import log from './log.js';
+import sendTelegram from './sendTelegram.js';
 
 export default class ContractNotifier {
   constructor (options) {
@@ -90,6 +91,7 @@ export default class ContractNotifier {
   }
 
   async getToSendList (contractsUri) {
+    const error_uris = [];
     const toSend = {};
     for (let i = 0; i < contractsUri.length; i++) {
       log.info(`Try to get responsible for contract: ${contractsUri[i]}`);
@@ -102,10 +104,15 @@ export default class ContractNotifier {
         }
       } catch (error) {
         log.error(`Cant calculate person to notify CONTRACT: ${contractsUri[i]}`);
+        error_uris.push(contractsUri[i]);
         continue;
       }
       log.info(`Get responsible for: ${contractsUri[i]}`);
     }
+    if (error_uris != []) {
+      await sendTelegram('Cant find responsible for this contracts:', error_uris.join('\n'));
+    }
+
     return toSend;
   }
 
