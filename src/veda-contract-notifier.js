@@ -1,6 +1,7 @@
 import ContractNotifier from './ContractNotifier.js';
 import options from '../conf/options.js';
 import log from './log.js';
+import sendTelegram from './sendTelegram.js';
 
 async function run () {
   const app = new ContractNotifier(options);
@@ -20,19 +21,21 @@ async function run () {
       await sendTelegram('🔴 Service critical query error:', error.message);
     });
 
-  const toSendList = await app.getToSendList(contractsQueryResult.result);
-  for (const toSendPerson in toSendList) {
-    if (!toSendPerson) {
-      continue;
-    }
-    try {
-      await app.sendMail(toSendPerson, toSendList[toSendPerson]);
-    } catch (error) {
-      log.error(`Cant send email for: ${toSendPerson}.`);
-      log.error(error.message);
-      await sendTelegram(`🟠 Service error: cant send email for: ${toSendPerson}. Error message: ${error.message}`);
-    }
-  }
+  const responsibleList = await app.getResponsiblesList(contractsQueryResult.result);
+  log.info(JSON.stringify(responsibleList, null, 2));
+  
+  // for (const toSendPerson in responsibleList) {
+  //   if (!toSendPerson) {
+  //     continue;
+  //   }
+  //   try {
+  //     await app.sendMail(toSendPerson, responsibleList[toSendPerson]);
+  //   } catch (error) {
+  //     log.error(`Cant send email for: ${toSendPerson}.`);
+  //     log.error(error.message);
+  //     await sendTelegram(`🟠 Service error: cant send email for: ${toSendPerson}. Error message: ${error.message}`);
+  //   }
+  // }
   log.info('Script end work.');
   await sendTelegram('🔴 Service stopped');
 }

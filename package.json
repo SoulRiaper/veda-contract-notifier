@@ -5,11 +5,15 @@
   "description": "",
   "main": "src/veda-contract-notifier.js",
   "scripts": {
+    "c8": "c8 npm t",
+    "test": "time -p node --expose-gc test",
     "start": "node --use-openssl-ca --openssl-legacy-provider src/veda-contract-notifier.js"
   },
   "author": "Roman Kozlov",
   "license": "ISC",
   "devDependencies": {
+    "baretest": "^2.0.0",
+    "c8": "^7.13.0",
     "eslint": "^8.55.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-standard": "^17.1.0",

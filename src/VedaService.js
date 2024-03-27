@@ -73,10 +73,7 @@ export default class VedaService {
 
   async isIndividValid (individ) {
     await individ.load();
-    if (individ.hasValue('v-s:deleted')) {
-      return individ.hasValue('v-s:deleted', false);
-    }
-    return true;
+    return ! individ.hasValue('v-s:deleted', true);
   }
 
   async getMailLetterView (templateUri) {

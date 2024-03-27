@@ -6,3 +6,4 @@ package-lock.json
 .pid
 *.log
 *.geany
+test

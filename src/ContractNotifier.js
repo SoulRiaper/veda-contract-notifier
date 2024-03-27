@@ -3,6 +3,8 @@ import {BaseModel} from 'veda-client';
 import Mustache from 'mustache';
 import log from './log.js';
 import sendTelegram from './sendTelegram.js';
+import {Responsible, Responsibility} from './ResponsiblePerson.js';
+import ResponsibleList from './ResponsibleList.js';
 
 export default class ContractNotifier {
   constructor (options) {
@@ -22,7 +24,7 @@ export default class ContractNotifier {
     }
   }
 
-  async getPersonToNotify (contractUri) {
+  async getResponsiblePerson (contractUri) {
     const contract = new BaseModel(contractUri);
     try {
       await contract.load();
@@ -31,49 +33,54 @@ export default class ContractNotifier {
       throw error;
     }
 
-    const isExecutorValid = await this.isContractResponsibleValid(contract, 'mnd-s:executorSpecialistOfContract')
+    const executorPropUri = 'mnd-s:executorSpecialistOfContract';
+    const supporterPropUri = 'mnd-s:supportSpecialistOfContract';
+    const managerPropUri = 'mnd-s:ContractManager';
+    const depPropUri = 'v-s:responsibleDepartment';
+
+    const isExecutorValid = await this.isContractResponsibleValid(contract, executorPropUri)
       .catch((error) => {
         log.error(`Failed to check isExecutorValid: ${error.message}`);
         return false;
       });
-    const isSupporterValid = await this.isContractResponsibleValid(contract, 'mnd-s:supportSpecialistOfContract')
+    const isSupporterValid = await this.isContractResponsibleValid(contract, supporterPropUri)
       .catch((error) => {
         log.error(`Failed to check isSupporterValid: ${error.message}`);
         return false;
       });
-    const isManagerValid = await this.isContractResponsibleValid(contract, 'mnd-s:ContractManager')
+    const isManagerValid = await this.isContractResponsibleValid(contract, managerPropUri)
       .catch((error) => {
         log.error(`Failed to check isManagerValid: ${error.message}`);
         return false;
       });
-    const isDepValid = await this.isContractResponsibleValid(contract, 'v-s:responsibleDepartment')
+    const isDepValid = await this.isContractResponsibleValid(contract, depPropUri)
       .catch((error) => {
         log.error(`Failed to check isDepValid: ${error.message}`);
         return false;
       });
 
     if (!isExecutorValid) {
-      if (contract.hasValue('v-s:responsibleDepartment')) {
+      if (contract.hasValue(depPropUri)) {
         try {
-          const responsibleDep = contract['v-s:responsibleDepartment'][0];
+          const responsibleDep = contract[depPropUri][0];
           await responsibleDep.load();
           const depChief = await this.veda.getChiefUri(responsibleDep);
           if (depChief) {
             const depChiefObj = new BaseModel(depChief);
             if (await this.veda.isIndividValid(depChiefObj)) {
-              return depChief;
+              return new Responsible(depChief, new Responsibility(depPropUri, contractUri));
             }
           }
         } catch (error) {
           log.error(`Failed to handle responsibleDep: ${error.message}`);
         }
       }
-      return 'd:contract_controller_role';
+      return new Responsible('d:contract_controller_role', new Responsibility("controller", contractUri));
     }
     if (!isSupporterValid || !isManagerValid || !isDepValid) {
-      return contract['mnd-s:executorSpecialistOfContract'][0].id;
+      return new Responsible( contract[executorPropUri][0].id, new Responsibility(executorPropUri, contractUri));
     }
-    return 'd:contract_controller_role';
+    return new Responsible('d:contract_controller_role', new Responsibility("controller", contractUri));
   }
 
   async isContractResponsibleValid (contract, responsibleProp) {
@@ -90,35 +97,33 @@ export default class ContractNotifier {
     }
   }
 
-  async getToSendList (contractsUri) {
+  async getResponsiblesList (contractsUri) {
     const error_uris = [];
-    const toSend = {};
+    const responsibleList = new ResponsibleList();
     for (let i = 0; i < contractsUri.length; i++) {
       log.info(`Try to get responsible for contract: ${contractsUri[i]}`);
       try {
-        const personToNotify = await this.getPersonToNotify(contractsUri[i]);
-        if (!toSend[personToNotify]) {
-          toSend[personToNotify] = [contractsUri[i]];
-        } else {
-          toSend[personToNotify].push(contractsUri[i]);
-        }
+        const responsible = await this.getResponsiblePerson(contractsUri[i]);
+        responsibleList.addResponsible(responsible);
       } catch (error) {
-        log.error(`Cant calculate person to notify CONTRACT: ${contractsUri[i]}`);
+        log.error(`Cant calculate person to notify CONTRACT: ${contractsUri[i]}, send it to controller`);
         error_uris.push(contractsUri[i]);
+        responsibleList.addResponsible(new Responsible('d:contract_controller_role', new Responsibility("controller", contractsUri[i])));
         continue;
       }
       log.info(`Get responsible for: ${contractsUri[i]}`);
     }
     if (error_uris != []) {
-      await sendTelegram('Cant find responsible for this contracts:', error_uris.join('\n'));
+      log.error('Cant find responsible for this contracts, send it to controller:', error_uris.join('\n'));
+      await sendTelegram('Cant find responsible for this contracts, send it to controller:', error_uris.join('\n'));
     }
 
-    return toSend;
+    return responsibleList;
   }
 
   async sendMail (recipient, contractList) {
     const view = {
-      app_name: this.veda.getAppName(),
+      app_name: 'Optiflow',
       contract_list: contractList.map((item) => this.options.veda.server + '#/' + item).join('\n'),
     };
     const letter = await this.veda.getMailLetterView(this.options.veda.mail.template);
@@ -131,7 +136,8 @@ export default class ContractNotifier {
     }
 
     const mailObj = this.veda.prepareEmailLetter(recipient, letter);
-    await mailObj.save();
+    // await mailObj.save();
     log.info(`Mail send to: ${recipient}. Email obj uri: ${mailObj.id}`);
+    log.info(mailObj);
   }
 }
