@@ -22,20 +22,17 @@ async function run () {
     });
 
   const responsibleList = await app.getResponsiblesList(contractsQueryResult.result);
-  log.info(JSON.stringify(responsibleList, null, 2));
+  const toSendList = responsibleList.getResponsibles();
   
-  // for (const toSendPerson in responsibleList) {
-  //   if (!toSendPerson) {
-  //     continue;
-  //   }
-  //   try {
-  //     await app.sendMail(toSendPerson, responsibleList[toSendPerson]);
-  //   } catch (error) {
-  //     log.error(`Cant send email for: ${toSendPerson}.`);
-  //     log.error(error.message);
-  //     await sendTelegram(`🟠 Service error: cant send email for: ${toSendPerson}. Error message: ${error.message}`);
-  //   }
-  // }
+  for (const resp of toSendList) {
+    try {
+      await app.sendMail(resp);
+    } catch (error) {
+      log.error(`Cant send email for: ${resp}.`);
+      log.error(error.message);
+      await sendTelegram(`🟠 Service error: cant send email for: ${resp}. Error message: ${error.message}`);
+    }
+  }
   log.info('Script end work.');
   await sendTelegram('🔴 Service stopped');
 }

@@ -18,4 +18,21 @@ export default class ResponsibleList {
           this.responsibles.push(newResponsible);
         }
     }
+
+    getResponsiblesByType(type) {
+        return this.responsibles.filter( resp => {
+            return resp.responsibilities.some(item => item.type === type)
+        }).map( resp => {
+            const responsibility = resp.responsibilities.find(item => item.type === type)
+            return {id : resp.id, documents: responsibility.documents}
+        });
+    }
+    
+    getResponsibles() {
+        return this.responsibles.map( resp => {
+            return resp.responsibilities.map( item => {
+                return { id: resp.id, type: item.type, documents: item.documents };
+            })
+        }).flat();
+    }
 }

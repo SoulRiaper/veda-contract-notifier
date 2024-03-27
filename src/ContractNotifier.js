@@ -37,6 +37,7 @@ export default class ContractNotifier {
     const supporterPropUri = 'mnd-s:supportSpecialistOfContract';
     const managerPropUri = 'mnd-s:ContractManager';
     const depPropUri = 'v-s:responsibleDepartment';
+    const controllerRespType = 'controller';
 
     const isExecutorValid = await this.isContractResponsibleValid(contract, executorPropUri)
       .catch((error) => {
@@ -75,12 +76,12 @@ export default class ContractNotifier {
           log.error(`Failed to handle responsibleDep: ${error.message}`);
         }
       }
-      return new Responsible('d:contract_controller_role', new Responsibility("controller", contractUri));
+      return new Responsible('d:contract_controller_role', new Responsibility(controllerRespType, contractUri));
     }
     if (!isSupporterValid || !isManagerValid || !isDepValid) {
       return new Responsible( contract[executorPropUri][0].id, new Responsibility(executorPropUri, contractUri));
     }
-    return new Responsible('d:contract_controller_role', new Responsibility("controller", contractUri));
+    return new Responsible('d:contract_controller_role', new Responsibility(controllerRespType, contractUri));
   }
 
   async isContractResponsibleValid (contract, responsibleProp) {
@@ -121,23 +122,32 @@ export default class ContractNotifier {
     return responsibleList;
   }
 
-  async sendMail (recipient, contractList) {
+  async sendMail (responsible) {
     const view = {
       app_name: 'Optiflow',
-      contract_list: contractList.map((item) => this.options.veda.server + '#/' + item).join('\n'),
+      contract_list: responsible.documents.map((item) => this.options.veda.server + '#/' + item).join('\n'),
     };
-    const letter = await this.veda.getMailLetterView(this.options.veda.mail.template);
+    const letter = await this.getMailLetterByRespType(responsible.type);
     letter.subject = Mustache.render(letter.subject, view).replace(/&#x2F;/g, '/');
     letter.body = Mustache.render(letter.body, view).replace(/&#x2F;/g, '/');
 
-    const recipientObj = new BaseModel(recipient);
-    if (! await this.veda.isIndividValid(recipientObj)) {
-      recipient = 'd:contract_controller_role';
-    }
+    const mailObj = this.veda.prepareEmailLetter(responsible.id, letter);
+ 
+    log.info(`Mail send to: ${responsible.id}. Email obj uri: ${mailObj.id}`);
+    log.info(mailObj['v-wf:to']);
+    log.info(mailObj['v-s:messageBody']);
+  }
+     // await mailObj.save();
 
-    const mailObj = this.veda.prepareEmailLetter(recipient, letter);
-    // await mailObj.save();
-    log.info(`Mail send to: ${recipient}. Email obj uri: ${mailObj.id}`);
-    log.info(mailObj);
+  async getMailLetterByRespType(type) {
+    if (type === 'mnd-s:executorSpecialistOfContract') {
+      return await this.veda.getMailLetterView(this.options.veda.mail.template + "-for-executor")
+    } 
+    if (type === 'v-s:responsibleDepartment') {
+      return await this.veda.getMailLetterView(this.options.veda.mail.template + "-for-dep-chief")
+    }
+    if (type === 'controller') {
+      return await this.veda.getMailLetterView(this.options.veda.mail.template + "-for-dep-controller")
+    }
   }
 }
