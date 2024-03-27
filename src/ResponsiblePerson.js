@@ -1,6 +1,5 @@
 export class Responsible {
-
-  constructor(id, responsibilities) {
+  constructor (id, responsibilities) {
     this.id = id;
     if (responsibilities && !Array.isArray(responsibilities)) {
       responsibilities = [responsibilities];
@@ -9,7 +8,7 @@ export class Responsible {
   }
 
   // добавить тип ответственности и соответствующие документы
-  addResponsibility(type, documents) {
+  addResponsibility (type, documents) {
     if (!Array.isArray(documents)) {
       documents = [documents];
     }
@@ -24,7 +23,7 @@ export class Responsible {
   }
 
   // метод для добавления документов в существующий тип ответственности
-  addDocuments(type, newDocuments) {
+  addDocuments (type, newDocuments) {
     this.responsibilities.forEach((responsibility) => {
       if (responsibility.type === type) {
         responsibility.documents.push(...newDocuments);
@@ -33,8 +32,8 @@ export class Responsible {
   }
 
   // метод для получения всех документов определенного типа ответственности
-  getDocuments(type) {
-    let documents = [];
+  getDocuments (type) {
+    const documents = [];
     this.responsibilities.forEach((responsibility) => {
       if (responsibility.type === type) {
         documents.push(...responsibility.documents);
@@ -42,11 +41,10 @@ export class Responsible {
     });
     return documents;
   }
-
 }
 
 export class Responsibility {
-  constructor(type, documents) {
+  constructor (type, documents) {
     this.type = type;
     if (!Array.isArray(documents)) {
       documents = [documents];

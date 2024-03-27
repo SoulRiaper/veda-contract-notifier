@@ -23,7 +23,7 @@ async function run () {
 
   const responsibleList = await app.getResponsiblesList(contractsQueryResult.result);
   const toSendList = responsibleList.getResponsibles();
-  
+
   for (const resp of toSendList) {
     try {
       await app.sendMail(resp);

@@ -79,7 +79,7 @@ export default class ContractNotifier {
       return new Responsible('d:contract_controller_role', new Responsibility(controllerRespType, contractUri));
     }
     if (!isSupporterValid || !isManagerValid || !isDepValid) {
-      return new Responsible( contract[executorPropUri][0].id, new Responsibility(executorPropUri, contractUri));
+      return new Responsible(contract[executorPropUri][0].id, new Responsibility(executorPropUri, contractUri));
     }
     return new Responsible('d:contract_controller_role', new Responsibility(controllerRespType, contractUri));
   }
@@ -93,7 +93,7 @@ export default class ContractNotifier {
       }
       return false;
     } catch (error) {
-      console.error(`Failed to validate contract responsible: ${error}`);
+      log.error(`Failed to validate contract responsible: ${error}`);
       throw error;
     }
   }
@@ -109,7 +109,7 @@ export default class ContractNotifier {
       } catch (error) {
         log.error(`Cant calculate person to notify CONTRACT: ${contractsUri[i]}, send it to controller`);
         error_uris.push(contractsUri[i]);
-        responsibleList.addResponsible(new Responsible('d:contract_controller_role', new Responsibility("controller", contractsUri[i])));
+        responsibleList.addResponsible(new Responsible('d:contract_controller_role', new Responsibility('controller', contractsUri[i])));
         continue;
       }
       log.info(`Get responsible for: ${contractsUri[i]}`);
@@ -132,22 +132,26 @@ export default class ContractNotifier {
     letter.body = Mustache.render(letter.body, view).replace(/&#x2F;/g, '/');
 
     const mailObj = this.veda.prepareEmailLetter(responsible.id, letter);
- 
+
     log.info(`Mail send to: ${responsible.id}. Email obj uri: ${mailObj.id}`);
     log.info(mailObj['v-wf:to']);
     log.info(mailObj['v-s:messageBody']);
   }
-     // await mailObj.save();
+  // await mailObj.save();
 
-  async getMailLetterByRespType(type) {
-    if (type === 'mnd-s:executorSpecialistOfContract') {
-      return await this.veda.getMailLetterView(this.options.veda.mail.template + "-for-executor")
-    } 
-    if (type === 'v-s:responsibleDepartment') {
-      return await this.veda.getMailLetterView(this.options.veda.mail.template + "-for-dep-chief")
-    }
-    if (type === 'controller') {
-      return await this.veda.getMailLetterView(this.options.veda.mail.template + "-for-dep-controller")
+  async getMailLetterByRespType (type) {
+    try {
+      if (type === 'mnd-s:executorSpecialistOfContract') {
+        return await this.veda.getMailLetterView(this.options.veda.mail.template + '-for-executor');
+      }
+      if (type === 'v-s:responsibleDepartment') {
+        return await this.veda.getMailLetterView(this.options.veda.mail.template + '-for-dep-chief');
+      }
+      if (type === 'controller') {
+        return await this.veda.getMailLetterView(this.options.veda.mail.template + '-for-dep-controller');
+      }
+    } catch (e) {
+      log.error('Cant get message template. Error message: ', e.message);
     }
   }
 }
