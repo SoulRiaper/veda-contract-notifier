@@ -20,7 +20,7 @@ async function run () {
       log.error(`Critical query error: ${error.message}. Exit.`);
       await sendTelegram('🔴 Service critical query error:', error.message);
     });
-
+  log.info(`Get ${contractsQueryResult.result.length} contracts url.`);
   const responsibleList = await app.getResponsiblesList(contractsQueryResult.result);
   const toSendList = responsibleList.getResponsibles();
 
@@ -33,6 +33,7 @@ async function run () {
       await sendTelegram(`🟠 Service error: cant send email for: ${resp}. Error message: ${error.message}`);
     }
   }
+  log.info(`Mail count: ${toSendList.length}; Responsibles count: ${responsibleList.responsibles.length}`);
   log.info('Script end work.');
   await sendTelegram('🔴 Service stopped');
 }

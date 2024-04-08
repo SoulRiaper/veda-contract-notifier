@@ -57,15 +57,15 @@ export default class VedaService {
     });
   }
 
-  async getChiefUri (department, depth) {
+  async getChiefDetailUri (department, depth) {
     depth = depth || 0;
     if ( department ) {
       if ( depth > 15 ) return undefined;
-      if ( department['v-s:hasChief'] ) return department['v-s:hasChief'][0].id;
+      if ( department['v-s:hasChiefDetail'] ) return department['v-s:hasChiefDetail'][0].id;
       if ( department['v-s:parentUnit'] ) {
         const dep = department['v-s:parentUnit'][0];
         dep.load();
-        return this.getChiefUri(dep, depth + 1);
+        return this.getChiefDetailUri(dep, depth + 1);
       };
     };
     return undefined;

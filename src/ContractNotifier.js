@@ -65,7 +65,10 @@ export default class ContractNotifier {
         try {
           const responsibleDep = contract[depPropUri][0];
           await responsibleDep.load();
-          const depChief = await this.veda.getChiefUri(responsibleDep);
+          if (! await this.veda.isIndividValid(responsibleDep)) {
+            return new Responsible('d:contract_controller_role', new Responsibility(controllerRespType, contractUri));
+          }
+          const depChief = await this.veda.getChiefDetailUri(responsibleDep);
           if (depChief) {
             const depChiefObj = new BaseModel(depChief);
             if (await this.veda.isIndividValid(depChiefObj)) {
@@ -102,7 +105,6 @@ export default class ContractNotifier {
     const error_uris = [];
     const responsibleList = new ResponsibleList();
     for (let i = 0; i < contractsUri.length; i++) {
-      log.info(`Try to get responsible for contract: ${contractsUri[i]}`);
       try {
         const responsible = await this.getResponsiblePerson(contractsUri[i]);
         responsibleList.addResponsible(responsible);
@@ -134,7 +136,6 @@ export default class ContractNotifier {
     const mailObj = this.veda.prepareEmailLetter(responsible.id, letter);
 
     log.info(`Mail send to: ${responsible.id}. Email obj uri: ${mailObj.id}`);
-    log.info(mailObj['v-wf:to']);
     log.info(mailObj['v-s:messageBody']);
   }
   // await mailObj.save();
