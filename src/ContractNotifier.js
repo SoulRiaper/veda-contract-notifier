@@ -2,7 +2,6 @@ import VedaService from './VedaService.js';
 import {BaseModel} from 'veda-client';
 import Mustache from 'mustache';
 import log from './log.js';
-import sendTelegram from './sendTelegram.js';
 import {Responsible, Responsibility} from './ResponsiblePerson.js';
 import ResponsibleList from './ResponsibleList.js';
 
@@ -133,11 +132,9 @@ export default class ContractNotifier {
     letter.body = Mustache.render(letter.body, view).replace(/&#x2F;/g, '/');
 
     const mailObj = this.veda.prepareEmailLetter(responsible.id, letter);
-
+    await mailObj.save();
     log.info(`Mail send to: ${responsible.id}. Email obj uri: ${mailObj.id}`);
-    log.info(mailObj['v-s:messageBody']);
   }
-  // await mailObj.save();
 
   async getMailLetterByRespType (type) {
     try {
