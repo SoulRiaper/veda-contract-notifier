@@ -118,7 +118,6 @@ export default class ContractNotifier {
     }
     if (error_uris != []) {
       log.error('Cant find responsible for this contracts, send it to controller:', error_uris.join('\n'));
-      await sendTelegram('Cant find responsible for this contracts, send it to controller:', error_uris.join('\n'));
     }
 
     return responsibleList;
