@@ -64,11 +64,25 @@ export default class VedaService {
       if ( department['v-s:hasChiefDetail'] ) return department['v-s:hasChiefDetail'][0].id;
       if ( department['v-s:parentUnit'] ) {
         const dep = department['v-s:parentUnit'][0];
-        dep.load();
+        await dep.load();
         return this.getChiefDetailUri(dep, depth + 1);
       };
     };
     return undefined;
+  }
+
+  async isSubUnitOf (department, tragetUri, depth) {
+    depth = depth || 0;
+    if ( department ) {
+      if ( depth > 15 ) return false;
+      if ( department.id == tragetUri ) return true;
+      if ( department['v-s:parentUnit'] ) {
+        const dep = department['v-s:parentUnit'][0];
+        await dep.load();
+        return this.isSubUnitOf(dep, tragetUri, depth + 1);
+      };
+    };
+    return false;
   }
 
   async isIndividValid (individ) {

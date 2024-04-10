@@ -32,6 +32,7 @@ export default class ContractNotifier {
       throw error;
     }
 
+    // contract responsibles properties
     const executorPropUri = 'mnd-s:executorSpecialistOfContract';
     const supporterPropUri = 'mnd-s:supportSpecialistOfContract';
     const managerPropUri = 'mnd-s:ContractManager';
@@ -60,13 +61,21 @@ export default class ContractNotifier {
       });
 
     if (!isExecutorValid) {
+      // calculate responsible if executor unvalid
       if (contract.hasValue(depPropUri)) {
         try {
           const responsibleDep = contract[depPropUri][0];
           await responsibleDep.load();
+
+          // if not UZ responsible == controller
+          if (! await this.veda.isSubUnitOf(responsibleDep, 'd:mondi_department_50001663')) {
+            log.info(contractUri, 'contract not from UZ. Send it to controller');
+            return new Responsible('d:contract_controller_role', new Responsibility('controller-not-uz', contractUri));
+          }
           if (! await this.veda.isIndividValid(responsibleDep)) {
             return new Responsible('d:contract_controller_role', new Responsibility(controllerRespType, contractUri));
           }
+
           const depChief = await this.veda.getChiefDetailUri(responsibleDep);
           if (depChief) {
             const depChiefObj = new BaseModel(depChief);
@@ -146,6 +155,9 @@ export default class ContractNotifier {
       }
       if (type === 'controller') {
         return await this.veda.getMailLetterView(this.options.veda.mail.template + '-for-dep-controller');
+      }
+      if (type === 'controller-not-uz') {
+        return await this.veda.getMailLetterView(this.options.veda.mail.template + '-controller-not-uz');
       }
     } catch (e) {
       log.error('Cant get message template. Error message: ', e.message);
