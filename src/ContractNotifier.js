@@ -132,17 +132,46 @@ export default class ContractNotifier {
   }
 
   async sendMail (responsible) {
+    const contracts = await Promise.all(responsible.documents.map(async (item) => {
+      const regNumber = await this.getContractProp(item, 'v-s:registrationNumber');
+      // const respDep = await this.getContractProp(item, 'v-s:responsibleDepartment');
+      // const exec = await this.getContractProp(item, 'mnd-s:executorSpecialistOfContract');
+      return [regNumber, `${this.options.veda.server}#/${item}`].map((result) => {
+        if (result == undefined) {
+          return 'не определено';
+        }
+        return result;
+      }).join(' - ');
+    }));
     const view = {
       app_name: 'Optiflow',
-      contract_list: responsible.documents.map((item) => this.options.veda.server + '#/' + item).join('\n'),
+      contract_list: contracts.join('\n'),
     };
     const letter = await this.getMailLetterByRespType(responsible.type);
     letter.subject = Mustache.render(letter.subject, view).replace(/&#x2F;/g, '/');
     letter.body = Mustache.render(letter.body, view).replace(/&#x2F;/g, '/');
 
     const mailObj = this.veda.prepareEmailLetter(responsible.id, letter);
-    await mailObj.save();
+    // await mailObj.save();
     log.info(`Mail send to: ${responsible.id}. Email obj uri: ${mailObj.id}`);
+    log.info(mailObj['v-s:messageBody']);
+  }
+
+  async getContractProp (contractUri, prop) {
+    try {
+      const contract = new BaseModel(contractUri);
+      await contract.load();
+      if (contract.hasValue(prop)) {
+        const val = contract[prop][0];
+        // if (val instanceof BaseModel) {
+        //   await val.load();
+        //   return val.toJSON()['rdfs:label'][0].data;
+        // }
+        return val;
+      }
+    } catch (e) {
+      log.error(e.message, 'cant get', prop);
+    }
   }
 
   async getMailLetterByRespType (type) {
